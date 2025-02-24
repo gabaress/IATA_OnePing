@@ -1,0 +1,38 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+}
+  
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    padding: 20px;
+    margin-top: 50px;
+}
+  
+.widget {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    height: 200px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+}
+  
+  /* Hover effect */
+.widget:hover {
+    transform: translateY(-5px); /* Slight lift on hover */
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Darker shadow */
+}
+  
+.widget h2 {
+    margin-bottom: 15px;
+    font-size: 24px;
+}
