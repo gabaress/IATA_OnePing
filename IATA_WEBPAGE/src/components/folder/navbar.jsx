@@ -21,7 +21,8 @@ const Navbar = () => {
           <div class="nav__menu" id="nav-menu">
              <ul class="nav__list">
                 <li><a href="/home" class="nav__link">Dashboard</a></li>
-
+                <li><a href="" class="nav__link">Order Tracking</a></li>
+                <li><a href="" class="nav__link">Contact Us</a></li>
              </ul>
           </div>
        </nav>
