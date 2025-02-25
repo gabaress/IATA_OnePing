@@ -6,7 +6,7 @@ let previousOrderStatuses = {};
 // Function to check for updates on favorited orders
 async function checkForOrderUpdates() {
     try {
-        const response = await fetch("http://localhost:3000/orders");
+        const response = await fetch("http://localhost:4000/orders");
         const orders = await response.json();
 
         orders.forEach(order => {
