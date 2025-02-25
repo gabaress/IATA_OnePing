@@ -57,40 +57,6 @@
             </tr>
         </tbody>
     </table>
-
-    <h2>Order Summary</h2>
-    <div class="summary">
-        <h2>Structured Analysis</h2>
-        <p id="summary"></p>
-    </div>
-    
-    <div class="raw-data">
-        <h2>Raw API Data</h2>
-        <pre id="rawData"></pre>
-    </div>
-    
-    <script>
-        // Fetch the order data from your server
-        fetch('http://localhost:4350/order-summary')
-            .then(response => response.json())
-            .then(data => {
-                // Display the structured analysis summary
-                document.getElementById('summary').innerHTML = `
-                    <strong>ID:</strong> ${data.analysis.id}<br>
-                    <strong>Name:</strong> ${data.analysis.name}<br>
-                    <strong>Status:</strong> ${data.analysis.status}<br>
-                    <strong>Summary:</strong> ${data.analysis.summary}
-                `;
-                
-                // Display the raw API data
-                document.getElementById('rawData').textContent = JSON.stringify(data.rawApiData, null, 2);
-            })
-            .catch(error => {
-                document.getElementById('summary').innerText = "Failed to load order data.";
-                console.error("Error fetching data:", error);
-            });
-            
-    </script>
     <script src="script.js"></script>
 </main>
 </body>
