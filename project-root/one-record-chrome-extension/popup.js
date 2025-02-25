@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     async function fetchOrders() {
         try {
-            const response = await fetch("http://localhost:3000/orders");
+            const response = await fetch("http://localhost:4000/orders");
             const orders = await response.json();
             const favOrders = orders.filter(order => order.favorite); // Show only favorited orders
             displayFavOrders(favOrders);

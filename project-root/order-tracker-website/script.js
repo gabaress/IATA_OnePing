@@ -1,10 +1,12 @@
+
+
 document.addEventListener("DOMContentLoaded", async function () {
     const ordersContainer = document.getElementById("orders-container");
 
     // Fetch and display orders
     async function fetchOrders() {
         try {
-            const response = await fetch("http://localhost:3000/orders");
+            const response = await fetch("http://localhost:4000/orders");
             const orders = await response.json();
             updateOrders(orders);
         } catch (error) {
@@ -37,7 +39,7 @@ document.addEventListener("DOMContentLoaded", async function () {
     // Function to toggle favorite orders in the server
     async function toggleFavorite(orderId) {
         try {
-            await fetch(`http://localhost:3000/orders/${orderId}/favorite`, {
+            await fetch(`http://localhost:4000/orders/${orderId}/favorite`, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" }
             });

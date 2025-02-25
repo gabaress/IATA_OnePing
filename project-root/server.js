@@ -1,3 +1,7 @@
+require("dotenv").config();
+const { z } = require("zod");
+const { zodResponseFormat } = require("openai/helpers/zod"); // Changed from import to require
+const { OpenAI } = require("openai");
 const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
@@ -12,39 +16,54 @@ let orders = [
     { id: 3, name: "Order #3", status: "Delivered", favorite: false }
 ];
 
+const openai = new OpenAI();
+
+const AnalysisSchema = z.object({  // Changed variable name for consistency
+    id: z.string(),
+    name: z.string(),
+    status: z.string(),
+    summary: z.string(),
+});
+
 // Fetch the latest logistics event and update Order #1
 async function updateOrderStatus() {
     try {
         const response = await axios.get("http://localhost:8080/logistics-objects/civic/logistics-events/", {
             headers: {
-                "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJGYzdaSHZUNGozbldNenZkX2xuYUsySGZWWnUtYWtBLTB0TGMwLVgwc1BZIn0.eyJleHAiOjE3NDA0NjA1ODYsImlhdCI6MTc0MDQyNDU4NiwianRpIjoiMmIzMjg1N2ItN2RjNi00MWQzLWJiM2EtOGEyZDFkMzA4ZWI0IiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4OTg5L3JlYWxtcy9uZW9uZSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiIwYWU4OThmMy1kMjQ4LTRlYWMtODY4MS1iMDM4MWM4MmQ2YzAiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJuZW9uZS1jbGllbnQiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIioiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwiZGVmYXVsdC1yb2xlcy1uZW9uZSIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwiY2xpZW50SG9zdCI6IjE3Mi4xOC4wLjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImxvZ2lzdGljc19hZ2VudF91cmkiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvbG9naXN0aWNzLW9iamVjdHMvX2RhdGEtaG9sZGVyIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LW5lb25lLWNsaWVudCIsImNsaWVudEFkZHJlc3MiOiIxNzIuMTguMC4xIiwiY2xpZW50X2lkIjoibmVvbmUtY2xpZW50In0.BYxBfDk7C4OMesA5sqH0Yv6jdur1KWIqGm0hCAMWt7yixEchb2VpMGfqR75Xbq817T5g29_SD00eCw_jRU80S-0TmE0c4AmCev47qCH1en_Haw8u84CnErpwqanJjaC9sQ7aiV4nffDQG0WbQnWe0MYcCkaslb8XFWBraVs2o2DJMFOtT1LhPbOOo-_qeqisZvZZDWu61cyH1lnkJudnC85q4PaExKkKpWizlisSD-cwypxSai5Q0ZA5M5dltMEdNRfCpH56lA8oqS95hmeDtfcfTi7fqW8RL93J_p_wqcD3dIzG_30EJKyhr1YC-_Zv_ovCau6fCMxd-CnGUXbBBw",
+                "Authorization": "Bearer eyJhbGciOiJSUzI1NiIsInR5cCIgOiAiSldUIiwia2lkIiA6ICJGYzdaSHZUNGozbldNenZkX2xuYUsySGZWWnUtYWtBLTB0TGMwLVgwc1BZIn0.eyJleHAiOjE3NDA1MDIwMTIsImlhdCI6MTc0MDQ2NjAxMywianRpIjoiMjdlNWMzNDQtMWU5NS00NTRlLTgyNmUtZDMwZDM0OGI4MTQyIiwiaXNzIjoiaHR0cDovL2xvY2FsaG9zdDo4OTg5L3JlYWxtcy9uZW9uZSIsImF1ZCI6ImFjY291bnQiLCJzdWIiOiIwYWU4OThmMy1kMjQ4LTRlYWMtODY4MS1iMDM4MWM4MmQ2YzAiLCJ0eXAiOiJCZWFyZXIiLCJhenAiOiJuZW9uZS1jbGllbnQiLCJhY3IiOiIxIiwiYWxsb3dlZC1vcmlnaW5zIjpbIioiXSwicmVhbG1fYWNjZXNzIjp7InJvbGVzIjpbIm9mZmxpbmVfYWNjZXNzIiwiZGVmYXVsdC1yb2xlcy1uZW9uZSIsInVtYV9hdXRob3JpemF0aW9uIl19LCJyZXNvdXJjZV9hY2Nlc3MiOnsiYWNjb3VudCI6eyJyb2xlcyI6WyJtYW5hZ2UtYWNjb3VudCIsIm1hbmFnZS1hY2NvdW50LWxpbmtzIiwidmlldy1wcm9maWxlIl19fSwic2NvcGUiOiJwcm9maWxlIGVtYWlsIiwiY2xpZW50SG9zdCI6IjE3Mi4xOC4wLjEiLCJlbWFpbF92ZXJpZmllZCI6ZmFsc2UsImxvZ2lzdGljc19hZ2VudF91cmkiOiJodHRwOi8vbG9jYWxob3N0OjgwODAvbG9naXN0aWNzLW9iamVjdHMvX2RhdGEtaG9sZGVyIiwicHJlZmVycmVkX3VzZXJuYW1lIjoic2VydmljZS1hY2NvdW50LW5lb25lLWNsaWVudCIsImNsaWVudEFkZHJlc3MiOiIxNzIuMTguMC4xIiwiY2xpZW50X2lkIjoibmVvbmUtY2xpZW50In0.uqoro_BhoEniyHpaYu8ZyvABFMntSu367q6B1TlVlqcNzTIh08C3InSmPktrm-SP2ayiROeK-Z8cdwirkN1Og15UK1w75zQIxdOJpoZ9HEWiBMRsvi3jwERG92AVZUgBsvO5F332JE5rqRARK14tPBV6aVJ9pzGvhvI6L_naRqMIXWkw4E9KfUzjuaVWW4KkkZWfYL1VR7zxcY1llWxkRZZoxkMBOV1bK0JNtvvjod-XvPfR74CJQwVOfVdms12AAq348ZRGuzrUz-_LWGA5UsILnS51HpAe3pFy4Qy5HRnQbdrZX_XHcrGWeNVW6CbpEOxGuuZ5OrxNPJJgmrmXaw",
                 "Accept": "application/ld+json; version=2.0.0-dev",
                 "Content-Type": "application/ld+json; version=2.0.0-dev"
             }
         });
 
-        if (response.data && response.data["@graph"]) {
-            // Sort events by `creationDate` in descending order (newest first)
-            const sortedEvents = response.data["@graph"]
-                .filter(event => event["@type"] === "LogisticsEvent" && event.creationDate)
-                .sort((a, b) => new Date(b.creationDate["@value"]) - new Date(a.creationDate["@value"]));
+        const logisticsEvents = response.data;
+        const transcript = JSON.stringify(logisticsEvents, null, 2);
+        console.log("Raw API Data:", transcript);
+    
+        // ✅ 3. Call OpenAI API to generate a structured summary
+        const completion = await openai.beta.chat.completions.parse({
+          model: "gpt-4o-mini",
+          messages: [
+            { role: "system", content: "your job is to, based on a transcript you're given, write a detailed report detailing the newest order and its positive values e.g id, name, status. You should then print out a 3 sentence summary of what is going on with each value, so that a non technical human can read it " },
+            { role: "user", content: transcript }
+          ],
+          response_format: zodResponseFormat(AnalysisSchema, "analysis") // Now using the correctly named AnalysisSchema
+        });
 
-            if (sortedEvents.length > 0) {
-                const latestEvent = sortedEvents[0]; // Get the most recent event
-                console.log("📌 Latest Event Retrieved:", latestEvent);
+        const analysis = completion.choices[0].message.parsed;
+        console.log("Structured Analysis:", JSON.stringify(analysis, null, 2));
 
-                if (latestEvent.eventName) {
-                    orders[0].status = latestEvent.eventName; // Update Order #1
-                    console.log(`✅ Order #1 updated to: ${latestEvent.eventName}`);
-                }
-            } else {
-                console.log("⚠️ No valid logistics events found.");
-            }
-        }
+        return analysis;
+
     } catch (error) {
-        console.error("❌ Error fetching logistics events:", error.response ? error.response.data : error.message);
+        console.error("Error:", error);
+        return { error: "Failed to process AI analysis" };
     }
 }
+
+updateOrderStatus().then(summary => {
+    console.log("Final Summary:", summary);
+});
 
 // API to get all orders
 app.get("/orders", (req, res) => {
@@ -82,7 +101,7 @@ app.put("/orders/:id", (req, res) => {
 setInterval(updateOrderStatus, 10000);
 
 // Start the server
-const PORT = 3000;
+const PORT = 4000;
 app.listen(PORT, () => {
     console.log(`✅ Server running on http://localhost:${PORT}`);
     updateOrderStatus(); // Fetch event on startup
